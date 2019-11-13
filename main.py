@@ -11,7 +11,6 @@ class GameWidget(QWidget):
         self.buttons = []
         for i in range(7):
             btn = QPushButton(str(i))
-            #btn.clicked.connect(getattr(self, "button"+str(i)+"pressed"))
             self.buttons.append(btn)
             lay.addWidget(btn, 1, i)
 
