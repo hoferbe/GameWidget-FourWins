@@ -87,6 +87,9 @@ class GameWidget(QWidget):
             else:
                 self.currentPlayer = self.playerOne
             self.drawArea.update()
+            if self.game.didFindWinner():
+                self.gameIsRunning = False
+                print("Winner found")
 
     def button0pressed(self):
         self.sendMove(0)

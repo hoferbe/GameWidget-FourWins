@@ -1,10 +1,10 @@
-import numpy
+import numpy as np
 
 
 class GameLogic:
 
     def __init__(self, playerOneID, playerTwoID):
-        self.grid = numpy.zeros((7, 7))
+        self.grid = np.zeros((7, 7))
 
         self.playerOneID = playerOneID
         self.playerTwoID = playerTwoID
@@ -25,6 +25,18 @@ class GameLogic:
             worked = True
         return worked
 
+    def currentPlayerID(self):
+        if self.currentPlayer == 1:
+            return self.playerOneID
+        else:
+            return self.playerTwoID
+
+    def changePlayer(self):
+        if self.currentPlayer == 1:
+            self.currentPlayer = 2
+        else:
+            self.currentPlayer = 1
+
     def didFindWinner(self):
         return self.foundWinner
 
@@ -33,7 +45,7 @@ class GameLogic:
         if column[-1] != 0:
             self.setWinner(False, playerID)
         else:
-            moveRow = numpy.count_nonzero(column)
+            moveRow = np.count_nonzero(column)
             self.grid[move][moveRow] = playerID
             self.didWin(move, moveRow)
             if self.currentPlayer == 1:
@@ -42,16 +54,38 @@ class GameLogic:
                 self.currentPlayer = 1
 
     def didWin(self, column, row):
+        x = column
+        y = row
+        for i in range(4):
+            if i <= x <= 3+i:
+                checkingArr = self.getLine(x-i, y, 1, 0)
+                if np.all(checkingArr == checkingArr[0]):
+                    self.setWinner(True, self.currentPlayerID())
+            if i <= x <= 3+i and i <= y <= 3+i:
+                checkingArr = self.getLine(x-i, y-i, 1, 1)
+                if np.all(checkingArr == checkingArr[0]):
+                    self.setWinner(True, self.currentPlayerID())
+            if i <= y <= 3+i:
+                checkingArr = self.getLine(x, y-i, 0, 1)
+                if np.all(checkingArr == checkingArr[0]):
+                    self.setWinner(True, self.currentPlayerID())
+            if i <= y <= 3+i and 3-i <= x <= 6-i:
+                checkingArr = self.getLine(x+i, y-i, -1, 1)
+                if np.all(checkingArr == checkingArr[0]):
+                    self.setWinner(True, self.currentPlayerID())
         return
+
+    def getLine(self, x, y, changeX, changeY):
+        arr = np.empty(4)
+        for i in range(4):
+            arr[i] = self.grid[x+i*changeX][y + i*changeY]
+        return arr
 
     def setWinner(self, winner, playerID):
         self.foundWinner = True
-        if winner:
-            self.winnerID = playerID
-        elif self.currentPlayer == 1:
-            self.winnerID = self.playerOneID
-        else:
-            self.winnerID = self.playerTwoID
+        if not winner:
+            self.changePlayer()
+        self.winnerID = self.currentPlayerID()
 
     def getGrid(self):
         playerGrid = []
