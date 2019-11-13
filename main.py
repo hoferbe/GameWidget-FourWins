@@ -8,9 +8,11 @@ class GameWidget(QWidget):
     def __init__(self):
         QWidget.__init__(self)
         lay = QGridLayout(self)
+        self.buttons = []
         for i in range(7):
             btn = QPushButton(str(i))
-            btn.clicked.connect(getattr(self, "button"+str(i)+"pressed"))
+            #btn.clicked.connect(getattr(self, "button"+str(i)+"pressed"))
+            self.buttons.append(btn)
             lay.addWidget(btn, 1, i)
 
         self.drawArea = QWidget()
@@ -20,20 +22,39 @@ class GameWidget(QWidget):
         self.playerOneColor = Qt.green
         self.playerTwoColor = Qt.red
 
-        self.gameIsRunning = True
-        self.game = GameLogic(-1, -2)
+        self.gameIsRunning = False
+        self.game = None
         self.playerOne = -1
         self.playerTwo = -2
         self.currentPlayer = self.playerOne
 
+        self.saveGrid = None
+
+        self.startGame()
+
         self.drawit = True
+
+    def startGame(self):
+        if not self.gameIsRunning:
+            for i, btn in enumerate(self.buttons):
+                btn.clicked.connect(getattr(self, "button"+str(i)+"pressed"))
+            self.gameIsRunning = True
+            self.playerOne = -1
+            self.playerTwo = -2
+            self.game = GameLogic(self.playerOne, self.playerTwo)
+
+    def stopGame(self):
+        if self.gameIsRunning:
+            for i, btn in enumerate(self.buttons):
+                btn.disconnect()
+            self.gameIsRunning = False
+            self.game = None
 
     def paintEvent(self, a0: QPaintEvent):
         painter = QPainter(self)
         painter.begin(self)
         self.drawGrid(painter)
-        if self.gameIsRunning:
-            self.drawGame(painter)
+        self.drawGame(painter)
         painter.end()
 
     def drawGrid(self, painter):
@@ -51,7 +72,11 @@ class GameWidget(QWidget):
             painter.drawLine(coordy0, coordy1)
 
     def drawGame(self, painter):
-        grid = self.game.getGrid()
+        if not self.game == None:
+            grid = self.game.getGrid()
+            self.saveGrid = grid
+        elif not self.saveGrid == None:
+            grid = self.saveGrid
         for i in range(7):
             for j in range(7):
                 if grid[i][j] == 1:
@@ -88,10 +113,12 @@ class GameWidget(QWidget):
                 self.currentPlayer = self.playerOne
             self.drawArea.update()
             if self.game.didFindWinner():
-                self.gameIsRunning = False
-                print("Winner found")
+                print("Winner found: " + str(self.game.whoWon()))
+                self.saveGrid = self.game.getGrid()
+                self.stopGame()
 
     def button0pressed(self):
+        print("Button 0 pressed")
         self.sendMove(0)
 
     def button1pressed(self):
